@@ -12,7 +12,10 @@ import { playSound } from './utils/audio';
 import { setupServiceWorker } from './utils/service-worker';
 
 // Configuration du mode développement
-if (process.env.NODE_ENV === 'development') {
+const isDevelopment = import.meta.env.DEV;
+const appVersion = import.meta.env.VITE_APP_VERSION || '1.0.0';
+
+if (isDevelopment) {
   console.log('Mode développement activé');
   
   // Activer les outils de développement A-Frame
@@ -22,9 +25,7 @@ if (process.env.NODE_ENV === 'development') {
   }
   
   // Afficher les informations de version
-  if (process.env.npm_package_version) {
-    console.log(`Version ${process.env.npm_package_version}`);
-  }
+  console.log(`Version ${appVersion}`);
 }
 
 // Fonction d'initialisation asynchrone

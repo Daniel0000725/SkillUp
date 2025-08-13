@@ -1,9 +1,13 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { resolve } from 'path';
 
-export default defineConfig({
+export default defineConfig(({ command, mode }) => {
+  // Charger les variables d'environnement
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  return {
   root: '.',
-  base: '/',
+  base: env.NODE_ENV === 'production' ? '/NexusARConnect/' : '/',
   publicDir: 'public',
   server: {
     port: 3000,
@@ -67,4 +71,5 @@ export default defineConfig({
       }
     }
   ]
+  };
 });
