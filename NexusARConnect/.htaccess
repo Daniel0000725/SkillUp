@@ -1,0 +1,146 @@
+# Configuration de base pour Nexus AR Connect
+# Activer la réécriture d'URL
+RewriteEngine On
+
+# Redirection vers HTTPS (à décommenter en production)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Redirection du www vers non-www (ou l'inverse selon préférence)
+# RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+# RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# Redirection des erreurs 404
+ErrorDocument 404 /404.html
+
+# Désactiver l'affichage du contenu des répertoires
+Options -Indexes
+
+# Activer la compression GZIP
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    
+    # Désactiver pour les navigateurs bogués
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+    
+    # Désactiver pour les proxies
+    Header append Vary User-Agent
+</IfModule>
+
+# Mise en cache des fichiers statiques
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Par défaut, 1 an
+    ExpiresDefault "access plus 1 year"
+    
+    # HTML, données
+    ExpiresByType text/html "access plus 1 hour"
+    ExpiresByType text/plain "access plus 1 month"
+    ExpiresByType text/xml "access plus 0 seconds"
+    ExpiresByType application/xml "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+    
+    # Feuilles de style et scripts
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    
+    # Images
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    
+    # Polices
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/otf "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+</IfModule>
+
+# Sécurité - En-têtes HTTP
+<IfModule mod_headers.c>
+    # Protection contre le clickjacking
+    Header always append X-Frame-Options SAMEORIGIN
+    
+    # Protection contre le MIME-sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Politique de sécurité du contenu (CSP)
+    # À personnaliser selon les besoins de votre application
+    # Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https:;"
+    
+    # Référent Policy
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Feature Policy
+    Header set Feature-Policy "geolocation 'self'; microphone 'none'; camera 'self'"
+    
+    # Permissions Policy (remplace Feature Policy)
+    Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    
+    # HSTS (à décommenter en production avec HTTPS)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# Désactiver le serveur signature
+ServerSignature Off
+
+# Protection contre le listage des répertoires
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protection des fichiers sensibles
+<FilesMatch "^(composer\.json|package\.json|webpack\.config\.js|\.env|\.gitignore|README\.md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Gestion des erreurs personnalisées
+ErrorDocument 403 /403.html
+ErrorDocument 404 /404.html
+ErrorDocument 500 /500.html
+
+# Compression des fichiers texte
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# Protection contre les injections de fichiers
+<IfModule mod_rewrite.c>
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+    RewriteRule ^(.*)$ index.html [F,L]
+</IfModule>
+
+# Désactiver l'accès aux répertoires sensibles
+<DirectoryMatch "(^|/)(\.git|node_modules|vendor|tests|log|tmp|config|database|storage)(/|$)">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>

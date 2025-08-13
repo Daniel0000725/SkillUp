@@ -1,0 +1,22 @@
+<testsuites id="" name="" tests="5" failures="0" skipped="0" errors="0" time="58.073350000000005">
+<testsuite name="health.spec.js" timestamp="2025-08-13T04:20:30.168Z" hostname="chromium" tests="1" failures="0" skipped="0" time="2.175" errors="0">
+<testcase name="API health endpoint › should return status ok" classname="health.spec.js" time="2.175">
+</testcase>
+</testsuite>
+<testsuite name="health.spec.js" timestamp="2025-08-13T04:20:30.168Z" hostname="firefox" tests="1" failures="0" skipped="0" time="1.6" errors="0">
+<testcase name="API health endpoint › should return status ok" classname="health.spec.js" time="1.6">
+</testcase>
+</testsuite>
+<testsuite name="health.spec.js" timestamp="2025-08-13T04:20:30.168Z" hostname="webkit" tests="1" failures="0" skipped="0" time="1.978" errors="0">
+<testcase name="API health endpoint › should return status ok" classname="health.spec.js" time="1.978">
+</testcase>
+</testsuite>
+<testsuite name="health.spec.js" timestamp="2025-08-13T04:20:30.168Z" hostname="Mobile Chrome" tests="1" failures="0" skipped="0" time="2.032" errors="0">
+<testcase name="API health endpoint › should return status ok" classname="health.spec.js" time="2.032">
+</testcase>
+</testsuite>
+<testsuite name="health.spec.js" timestamp="2025-08-13T04:20:30.168Z" hostname="Mobile Safari" tests="1" failures="0" skipped="0" time="0.848" errors="0">
+<testcase name="API health endpoint › should return status ok" classname="health.spec.js" time="0.848">
+</testcase>
+</testsuite>
+</testsuites>

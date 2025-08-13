@@ -1,0 +1,15 @@
+# Fichier robots.txt pour Nexus AR Connect
+# Permet l'indexation de toutes les pages publiques
+
+User-agent: *
+Allow: /
+
+# Empêche l'indexation des dossiers système
+Disallow: /node_modules/
+Disallow: /dist/
+Disallow: /build/
+Disallow: /test/
+Disallow: /coverage/
+
+# Sitemap
+Sitemap: https://votredomaine.com/sitemap.xml

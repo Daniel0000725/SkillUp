@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Nexus AR Connect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+    <!-- Interface Utilisateur -->
+    <div id="ui-container">
+        <header>
+            <h1>Nexus AR</h1>
+            <div id="connection-status">
+                <span class="status-dot"></span>
+                <span>Prêt</span>
+            </div>
+        </header>
+
+        <div id="scanner-view">
+            <div class="scanner-frame">
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+                <div class="scan-line"></div>
+            </div>
+            <p class="hint">Pointez vers un QR code pour ouvrir un portail AR</p>
+        </div>
+
+        <div id="ar-view" style="display: none;">
+            <div id="portal-container">
+                <!-- Les portails AR seront ajoutés ici dynamiquement -->
+            </div>
+            <button id="close-portal" class="btn">Fermer le portail</button>
+        </div>
+    </div>
+
+    <!-- Conteneur AR.js -->
+    <div id="arjs-container">
+        <a-scene embedded arjs='sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'>
+            <a-marker type='barcode' value='0' id='marker-0'>
+                <a-box position='0 0.5 0' material='opacity: 0.0; transparent: true'>
+                    <a-animation attribute="rotation" to="0 360 0" dur="10000" easing="linear" repeat="indefinite"></a-animation>
+                </a-box>
+            </a-marker>
+            <a-entity camera></a-entity>
+        </a-scene>
+    </div>
+
+    <!-- Modèle de portail -->
+    <template id="portal-template">
+        <div class="portal">
+            <div class="portal-content">
+                <h2 class="portal-title">Portail #1</h2>
+                <div class="portal-animation">
+                    <div class="ring outer"></div>
+                    <div class="ring middle"></div>
+                    <div class="ring inner"></div>
+                </div>
+                <div class="portal-actions">
+                    <button class="btn action-btn">Ouvrir</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</body>
+</html>
