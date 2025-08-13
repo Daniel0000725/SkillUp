@@ -26,7 +26,11 @@ export function initARScene() {
       </a-camera>
     </a-entity>
     <a-entity id="arjs"
-              arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+              arjs="sourceType: webcam; 
+                    debugUIEnabled: false; 
+                    detectionMode: mono_and_matrix; 
+                    matrixCodeType: 3x3; 
+                    cameraParametersUrl: '/data/camera_para.dat'"
               gesture-handler="enabled: true">
     </a-entity>
   `;

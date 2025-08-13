@@ -5,9 +5,9 @@
 
 export const AUDIO_CONFIG = {
   // Paramètres généraux
-  masterVolume: 0.7,  // Volume principal (0.0 à 1.0)
-  enabled: true,      // Active/désactive tout l'audio
-  debugEnabled: false,       // Mode débogage (booléen)
+  masterVolume: 0.0,  // Volume principal (0.0 à 1.0) - Mis à 0 pour désactiver
+  enabled: false,     // Désactive tout l'audio par défaut
+  debugEnabled: false, // Mode débogage (booléen)
   
   // Sons d'interface utilisateur
   ui: {

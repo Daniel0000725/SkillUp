@@ -30,8 +30,8 @@ class NexusARApp {
     this.state = {
       isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
       isOnline: navigator.onLine,
-      hasWebGL: this._checkWebGL(),
-      hasARSupport: this._checkARSupport(),
+      hasWebGL: null, // Initialisé à null, sera défini dans init()
+      hasARSupport: null, // Initialisé à null, sera défini dans init()
       permissions: {
         camera: false,
         notifications: false,
@@ -73,7 +73,24 @@ class NexusARApp {
    * Initialise l'application
    */
   async init() {
+    if (this.isInitialized) return;
+    
     try {
+      console.log('Initialisation de Nexus AR Connect...');
+      
+      // Vérifier WebGL
+      this.state.hasWebGL = this._checkWebGL();
+      console.log('WebGL supporté:', this.state.hasWebGL);
+      
+      // Vérifier le support AR de manière asynchrone
+      try {
+        this.state.hasARSupport = await this._checkARSupport();
+        console.log('Support AR détecté:', this.state.hasARSupport);
+      } catch (error) {
+        console.error('Erreur lors de la vérification du support AR:', error);
+        this.state.hasARSupport = false;
+      }
+      
       // Afficher l'écran de chargement
       showLoadingScreen(0);
       
@@ -170,32 +187,55 @@ class NexusARApp {
   }
   
   /**
-   * Vérifie les prérequis de l'application
+   * Vérifie les prérequis de l'application de manière plus robuste
    */
   async _checkRequirements() {
-    // Vérifier la compatibilité WebGL
-    if (!this.state.hasWebGL) {
-      this._showError('Votre navigateur ne supporte pas WebGL. Veuillez mettre à jour votre navigateur.');
-      return false;
+    const errors = [];
+    
+    // 1. Vérifier WebGL
+    if (this.state.hasWebGL === false) {
+      errors.push('Votre navigateur ou appareil ne semble pas supporter WebGL, qui est requis pour cette application.');
+      errors.push('Conseils :');
+      errors.push('- Mettez à jour votre navigateur vers la dernière version');
+      errors.push('- Vérifiez que votre carte graphique est compatible avec WebGL');
+      errors.push('- Activez l\'accélération matérielle dans les paramètres de votre navigateur');
     }
     
-    // Vérifier la connexion Internet (seulement pour le chargement initial)
+    // 2. Vérifier le support AR (avertissement mais non bloquant au démarrage)
+    if (this.state.hasARSupport === false) {
+      console.warn('AR non détecté pour le moment. L\'app tentera AR.js en fallback lors de l\'initialisation de la scène.');
+    }
+    
+    // 3. Vérifier la connexion Internet (avertissement uniquement)
     if (!this.state.isOnline) {
       console.warn('Aucune connexion Internet détectée. Certaines fonctionnalités peuvent être limitées.');
     }
     
-    // Vérifier les API nécessaires
-    const requiredAPIs = [
-      'Promise', 'fetch', 'serviceWorker', 'indexedDB',
-      'IntersectionObserver', 'requestAnimationFrame'
-    ];
-    
-    const missingAPIs = requiredAPIs.filter(api => !(api in window));
+    // 4. Vérifier les API nécessaires
+    const requiredWindowAPIs = ['Promise', 'fetch', 'indexedDB', 'IntersectionObserver', 'requestAnimationFrame'];
+    const missingWindowAPIs = requiredWindowAPIs.filter(api => !(api in window));
+    // serviceWorker est sur navigator, pas sur window
+    const hasServiceWorker = ('serviceWorker' in navigator);
+    const missingAPIs = [...missingWindowAPIs, ...(hasServiceWorker ? [] : ['serviceWorker(navigator)'])];
     if (missingAPIs.length > 0) {
-      this._showError(`Les API suivantes sont requises mais ne sont pas disponibles: ${missingAPIs.join(', ')}`);
+      errors.push(`Les API suivantes sont requises mais ne sont pas disponibles : ${missingAPIs.join(', ')}`);
+      errors.push('Veuillez mettre à jour votre navigateur vers une version plus récente.');
+    }
+    
+    // 5. Vérifier les permissions
+    if (!this.state.permissions.camera) {
+      console.warn('La caméra n\'est pas encore autorisée. Une demande d\'autorisation sera effectuée.');
+    }
+    
+    // Afficher les erreurs si nécessaire
+    if (errors.length > 0) {
+      const errorMessage = errors.join('\n\n');
+      console.error('Erreurs de configuration détectées :\n', errorMessage);
+      this._showError(errorMessage);
       return false;
     }
     
+    console.log('Tous les prérequis sont satisfaits');
     return true;
   }
   
@@ -687,33 +727,95 @@ class NexusARApp {
   }
   
   /**
-   * Vérifie si WebGL est supporté
+   * Vérifie si WebGL est supporté de manière plus fiable
    */
   _checkWebGL() {
     try {
+      // Vérifier si le navigateur supporte WebGL
+      if (!window.WebGLRenderingContext) {
+        console.warn('WebGL n\'est pas supporté par ce navigateur');
+        return false;
+      }
+      
+      // Créer un canvas pour tester le contexte WebGL
       const canvas = document.createElement('canvas');
-      return !!(window.WebGLRenderingContext && 
-               (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-    } catch (e) {
+      if (!canvas) {
+        console.warn('Impossible de créer un élément canvas');
+        return false;
+      }
+      
+      // Essayer d'obtenir un contexte WebGL
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      
+      // Vérifier si le contexte WebGL est valide
+      if (!gl) {
+        console.warn('Impossible d\'obtenir un contexte WebGL');
+        return false;
+      }
+      
+      // Vérifier la version de WebGL
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+        const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        console.log(`WebGL - Fournisseur: ${vendor}, Rendu: ${renderer}`);
+      }
+      
+      console.log('WebGL est supporté avec succès');
+      return true;
+      
+    } catch (error) {
+      console.error('Erreur lors de la détection de WebGL:', error);
       return false;
     }
   }
   
   /**
-   * Vérifie si la réalité augmentée est supportée
+   * Vérifie si la réalité augmentée est supportée de manière plus fiable
    */
-  _checkARSupport() {
-    // Vérifier la compatibilité WebXR
-    if ('xr' in navigator) {
-      return navigator.xr.isSessionSupported('immersive-ar');
+  async _checkARSupport() {
+    try {
+      console.log('Vérification du support de la réalité augmentée...');
+      
+      // Vérifier la compatibilité WebXR (pour les appareils modernes)
+      if ('xr' in navigator) {
+        try {
+          const supported = await navigator.xr.isSessionSupported('immersive-ar');
+          console.log('WebXR AR supporté:', supported);
+          if (supported) return true;
+        } catch (xrError) {
+          console.warn('Erreur lors de la vérification WebXR AR:', xrError);
+        }
+      } else {
+        console.log('WebXR non disponible dans ce navigateur');
+      }
+      
+      // Vérifier la compatibilité WebAR (AR.js)
+      if (window.ARController && window.ARController.getUserMediaAR) {
+        console.log('AR.js est disponible');
+        return true;
+      } else {
+        console.log('AR.js non détecté');
+      }
+      
+      // Vérifier si nous sommes sur un appareil mobile (meilleure expérience AR)
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log('Appareil mobile détecté:', isMobile);
+      
+      // Si nous sommes sur mobile, nous pouvons essayer de forcer AR.js même si non détecté
+      // car il pourrait être chargé plus tard
+      if (isMobile) {
+        console.log('Tentative de chargement d\'AR.js en mode mobile');
+        return true;
+      }
+      
+      console.warn('Aucun support AR détecté');
+      return false;
+      
+    } catch (error) {
+      console.error('Erreur lors de la vérification du support AR:', error);
+      return false;
     }
-    
-    // Vérifier la compatibilité WebAR (AR.js)
-    if (window.ARController && window.ARController.getUserMediaAR) {
-      return true;
-    }
-    
-    return false;
   }
   
   /**

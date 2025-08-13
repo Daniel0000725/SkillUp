@@ -17,6 +17,13 @@ class AudioManager {
     if (this.initialized) return;
     
     try {
+      // Ne rien faire si l'audio est désactivé par la config
+      if (!AUDIO_CONFIG.enabled) {
+        console.log('Audio désactivé par la configuration. Initialisation audio ignorée.');
+        this.initialized = false;
+        this.audioEnabled = false;
+        return false;
+      }
       // Créer le contexte audio
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) {
@@ -26,8 +33,10 @@ class AudioManager {
       
       this.audioContext = new AudioContext(AUDIO_CONFIG.performance.audioContext);
       
-      // Initialiser les sons
-      await this._preloadSounds();
+      // Initialiser les sons si le préchargement est activé
+      if (AUDIO_CONFIG.performance.preload) {
+        await this._preloadSounds();
+      }
       
       // Gestion du déverrouillage audio sur mobile
       this._setupAudioUnlock();
@@ -50,6 +59,7 @@ class AudioManager {
    * Précharge tous les sons configurés
    */
   async _preloadSounds() {
+    if (!AUDIO_CONFIG.enabled) return;
     const promises = AUDIO_FILES.map(src => this._loadSound(src));
     await Promise.all(promises);
     console.log('Tous les sons ont été chargés');
@@ -118,7 +128,7 @@ class AudioManager {
    * Joue un son
    */
   play(soundName, options = {}) {
-    if (!this.audioEnabled || this.muted) return null;
+    if (!AUDIO_CONFIG.enabled || !this.audioEnabled || this.muted) return null;
     
     const soundConfig = this._getSoundConfig(soundName);
     if (!soundConfig) {
@@ -293,8 +303,8 @@ export const toggleMute = () => audioManager.toggleMute();
 export const setVolume = (volume) => audioManager.setVolume(volume);
 export const setAudioEnabled = (enabled) => audioManager.setEnabled(enabled);
 
-// Initialisation automatique au chargement du module
-if (typeof window !== 'undefined') {
+// Initialisation automatique seulement si l'audio est activé
+if (typeof window !== 'undefined' && AUDIO_CONFIG.enabled) {
   window.addEventListener('load', () => {
     audioManager.init().then(() => {
       console.log('AudioManager initialisé avec succès');
